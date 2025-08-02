@@ -12,6 +12,45 @@
                 var firstSheetName = workbook.SheetNames[0];
                 var worksheet = workbook.Sheets[firstSheetName];
 
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
                
                 var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
                 
@@ -212,12 +251,15 @@
   </div>
   
   <div class="audio-container">
-    <audio id="agnes-audio" loop volume="0.5">
-      <source src="agnes.mp3" type="audio/mpeg">
-      <source src="agnes.mp3" type="audio/ogg">
-      Tu navegador no soporta el elemento de audio.
+    <audio id="background-audio" loop volume="0.5">
+      <source src="https://eta.vgmtreasurechest.com/soundtracks/tsukihime-a-piece-of-blue-glass-moon-original-soundtrack/qpruzxirvb/1-05.%20Record.mp3" type="audio/mpeg">
+      <source src="https://eta.vgmtreasurechest.com/soundtracks/tsukihime-a-piece-of-blue-glass-moon-original-soundtrack/qpruzxirvb/1-05.%20Record.mp3" type="audio/ogg">
+      
     </audio>
-    <button id="play-agnes-btn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">Reproducir Audio de Agnes</button>
+    <div class="flex space-x-2">
+      <button id="play-btn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">Reproducir</button>
+      <button id="pause-btn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">Pausar</button>
+    </div>
   </div>
 
   <script type="text/javascript">
@@ -368,11 +410,20 @@
     });
 
     
-    const agnesAudio = document.getElementById('agnes-audio');
-    const playAgnesBtn = document.getElementById('play-agnes-btn');
+    const audio = document.getElementById('background-audio');
+    const playBtn = document.getElementById('play-btn');
+    const pauseBtn = document.getElementById('pause-btn');
 
-    playAgnesBtn.addEventListener('click', () => {
-      agnesAudio.play();
+    playBtn.addEventListener('click', () => {
+      audio.play();
+      playBtn.classList.add('hidden');
+      pauseBtn.classList.remove('hidden');
+    });
+
+    pauseBtn.addEventListener('click', () => {
+      audio.pause();
+      pauseBtn.classList.add('hidden');
+      playBtn.classList.remove('hidden');
     });
   </script>
 </body>
