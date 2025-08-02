@@ -1,0 +1,430 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+               
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); 
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bitácora de la Científica</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background-image: url('https://img.freepik.com/fotos-premium/oscuro-cuarto-hormigon-vacio-brillo-luz-agujero-techo-ilustracion-renderizado_44481-606.jpg');
+      background-size: cover;
+      background-position: center;
+      overflow: auto;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      font-family: 'Courier New', Courier, monospace;
+      position: relative;
+      perspective: 1000px;
+      padding-bottom: 20vh;
+    }
+
+    #table-container {
+      width: 70vw;
+      height: 60vh;
+      position: relative;
+      transition: transform 2.5s ease;
+      transform-style: preserve-3d;
+      transform: rotateX(45deg);
+      z-index: 40;
+    }
+    #table-container.top-view {
+      transform: rotateX(0deg);
+    }
+    .table {
+      width: 100%;
+      height: 100%;
+      background-image: url('https://media.istockphoto.com/id/486025532/es/foto/habitaci%C3%B3n-vac%C3%ADa-cemento-de-las-paredes-y-pisos.jpg?s=612x612&w=0&k=20&c=9P2AEtt5uDG3S00DlUmjp01NWBm7BwEaxz-TXIhxwuA=');
+      background-size: cover;
+      background-position: center;
+      position: absolute;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.8);
+      border-radius: 8px;
+    }
+    .folder {
+      position: absolute;
+      width: 200px;
+      height: 280px;
+      background: #f5e8c7;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.7);
+      cursor: pointer;
+      border: 2px solid #d69e2e;
+      border-radius: 5px;
+      transform: rotate(var(--rotate)) translate(var(--translate-x), var(--translate-y)) rotateY(0deg);
+      overflow: hidden;
+      position: absolute;
+      z-index: 20;
+    }
+    .folder::after {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 24px;
+      color: #e53e3e;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    }
+    .folder:hover {
+      transform: scale(1.05) rotate(var(--rotate)) translate(var(--translate-x), var(--translate-y)) rotateY(0deg);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.9);
+    }
+    .folder.open {
+      transform: scale(1.2) rotate(0deg) translate(-100px, -140px);
+      left: 50%;
+      top: 50%;
+      z-index: 30;
+    }
+    .folder-content {
+      position: absolute;
+      width: 300px;
+      height: 280px;
+      background: #fff;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.7);
+      border: 2px solid #4a5568;
+      border-radius: 5px;
+      padding: 20px;
+      display: none;
+      flex-direction: column;
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      z-index: 40;
+    }
+    .folder.open + .folder-content {
+      display: flex;
+      opacity: 1;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+    }
+    .folder-content .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 24px;
+      cursor: pointer;
+      color: #e53e3e;
+      z-index: 50;
+    }
+    .folder-image {
+      width: 100px;
+      height: 120px;
+      background: url('https://via.placeholder.com/100x120') no-repeat center/cover;
+      border: 2px solid #4a5568;
+      margin-bottom: 10px;
+      position: relative;
+    }
+    .folder-image::before {
+      content: "";
+      position: absolute;
+      top: -10px;
+      left: 10px;
+      width: 20px;
+      height: 20px;
+      background: #4a5568;
+      border-radius: 50%;
+      transform: rotate(45deg);
+    }
+    .folder-text {
+      flex: 1;
+      font-size: 12px;
+      color: #2d3748;
+      overflow-y: auto;
+      max-height: 150px;
+    }
+    .click-area {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 20vh;
+      z-index: 50;
+      cursor: pointer;
+    }
+    .audio-container {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 5px;
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="bg-gray-900 text-gray-800">
+  <div id="overlay"></div>
+  <div class="click-area" id="click-area"></div>
+  <div id="table-container" class="relative">
+    <div class="table"></div>
+    <div id="folders-container" class="relative w-full h-full">
+      
+    </div>
+  </div>
+  <div id="modal" class="hidden">
+    <div id="modal-content" class="relative">
+      <span id="close-modal" class="hover:text-red-600">×</span>
+      <div id="modal-text" class="text-gray-800"></div>
+    </div>
+  </div>
+  
+  <div class="audio-container">
+    <audio id="background-audio" loop volume="0.5">
+      <source src="https://eta.vgmtreasurechest.com/soundtracks/tsukihime-a-piece-of-blue-glass-moon-original-soundtrack/qpruzxirvb/1-05.%20Record.mp3" type="audio/mpeg">
+      <source src="https://eta.vgmtreasurechest.com/soundtracks/tsukihime-a-piece-of-blue-glass-moon-original-soundtrack/qpruzxirvb/1-05.%20Record.mp3" type="audio/ogg">
+      
+    </audio>
+    <div class="flex space-x-2">
+      <button id="play-btn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">Reproducir</button>
+      <button id="pause-btn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">Pausar</button>
+    </div>
+  </div>
+
+  <script type="text/javascript">
+    var gk_isXlsx = false;
+    var gk_xlsxFileLookup = {};
+    var gk_fileData = {};
+    function filledCell(cell) {
+      return cell !== '' && cell != null;
+    }
+    function loadFileData(filename) {
+      if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+        try {
+          var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+          var firstSheetName = workbook.SheetNames[0];
+          var worksheet = workbook.Sheets[firstSheetName];
+
+          
+          var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+          
+          var filteredData = jsonData.filter(row => row.some(filledCell));
+
+          
+          var headerRowIndex = filteredData.findIndex((row, index) =>
+            row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+          );
+          
+          if (headerRowIndex === -1 || headerRowIndex > 25) {
+            headerRowIndex = 0;
+          }
+
+          
+          var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); 
+          csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+          return csv;
+        } catch (e) {
+          console.error(e);
+          return "";
+        }
+      }
+      return gk_fileData[filename] || "";
+    }
+
+    const foldersData = [
+      {
+        title: "Inicio de Agnes",
+        text: "Nombre: Agnes Tachyon\nEdad: 19 años (edad en el reporte)\nProfesión: Investigadora\nGustos: Dulces, gatos, curiosidad, café con leche, cerveza dulce\nDisgustos: Sabores amargos, mentiras piadosas, ser subestimada, odio sin justificación, desprecio hacia su persona\n\nAgnes Tachyon creció con deficiencias en su metabolismo que le provocaron un desarrollo físico más lento y problemas de salud durante su infancia. Estas condiciones la obligaron a permanecer en casa la mayor parte del tiempo hasta los 12 años, cuando, gracias a los esfuerzos de sus padres, logró mejorar su metabolismo. Sin embargo, el uso prolongado de medicamentos tuvo un impacto en su salud, dificultándole realizar ejercicio físico de manera constante. Por ello, Agnes se limitó a actividades como caminatas y algo de natación, sin mostrar gran interés por el deporte.\n\nEn su etapa escolar no destacó académicamente hasta que, al llegar a la pubertad, su esfuerzo y dedicación le permitieron ingresar a una universidad de poco prestigio debido a las limitaciones económicas causadas por los costosos tratamientos médicos de su infancia. En la universidad, Agnes tuvo que esforzarse el doble —o incluso el quíntuple— para sobresalir. A pesar de las dificultades, su perseverancia dio frutos: al finalizar sus estudios, obtuvo una beca gracias a sus méritos y sus investigaciones.\n\nAunque al principio no tenía claro en qué área especializarse, su experiencia personal con las limitaciones de su cuerpo la llevó a enfocarse en la investigación del cuerpo humano. Este interés la motivó a trabajar en proyectos para superar las barreras físicas que alguna vez la limitaron. En una conferencia, conoció a dos personas con quienes fundaría una pequeña empresa dedicada a mejorar la salud y el rendimiento del cuerpo humano. Con el tiempo, esta empresa ganó renombre en el país y atrajo la atención de organizaciones gubernamentales, que comenzaron a financiar nuevas investigaciones. Actualmente, se cree que estas investigaciones están respaldadas por fondos gubernamentales, lo que ha permitido a la empresa expandir sus proyectos y continuar rompiendo los límites del cuerpo humano.",
+        rotate: '-4deg',
+        translateX: '1vw',
+        translateY: '10vh',
+        image: 'https://i.pinimg.com/736x/69/8e/89/698e89f054a60ed65bae1f5fe8ae8e5a.jpg'
+      },
+      {
+        title: "Caida de Agnes",
+        text: "Nombre: Agnes Tachyon\nEdad: 24 años (edad en el reporte)\nProfesión: Directora del Departamento de Optimización Humana (DOH)\nGustos: Dulces, gatos, curiosidad, café con leche, cerveza dulce, calma, visitas, flores\nDisgustos: Sabores amargos, mentiras piadosas, ser subestimada, odio sin justificación, desprecio hacia su persona, medicamentos, pastillas, agujas\n\nAgnes Tachyon, cofundadora de la empresa 'Aurora Vitalis', se encuentra actualmente internada en un hospital afiliado a la compañía debido a una caída repentina en su conteo de glóbulos blancos. Se sospecha que la enfermedad metabólica de su infancia ha reaparecido, agravada por una alimentación deficiente y falta de descanso adecuado durante su adolescencia. Debido a los constantes tratamientos médicos y su estado de salud debilitado, Agnes tuvo que retirarse temporalmente de las investigaciones, participando solo en casos específicos. Sin embargo, su condición ha llevado a algunos a cuestionar su capacidad para continuar como directora del Departamento de Optimización Humana (DOH), e incluso hay quienes creen que ya no puede aportar más a la empresa.\n\nAl entrevistar a sus colegas, estos evitaron profundizar en el tema, afirmando que Agnes tomará el tiempo necesario para recuperarse. No obstante, debido a la presión de competidores en países como China, Inglaterra, Japón y Estados Unidos, la empresa enfrenta el riesgo de graves consecuencias si espera indefinidamente por su recuperación.\n\n[El reporte se pausó durante varias semanas para evaluar la evolución de este proceso.]\n\nContinuación:\n\nAgnes logró recuperarse, pero desarrolló un extraño trastorno metabólico que parece ralentizar su envejecimiento y su desarrollo físico, haciendo que su apariencia sea más juvenil. Al regresar a Aurora Vitalis, descubrió que había sido reemplazada por una nueva directora, más joven que ella. Esto generó una reacción negativa en Agnes, quien sintió que su rol como cofundadora fue menospreciado. Su frustración derivó en un conflicto público, descrito como una 'rabieta', que resultó en su suspensión temporal. La empresa, bajo una fuerte presión externa, enfrentó expectativas de tomar medidas drásticas, y se especula que Agnes podría ser reemplazada permanentemente debido a su estado de salud y sus limitaciones actuales. Consciente de estas sospechas, Agnes planea tomar medidas para proteger su posición, aunque los detalles de sus acciones no están claros.\n\n[Se tomaron varias semanas para completar este reporte.]\n\nActualización final:\n\nAgnes fue destituida de su cargo. Aunque no se sabe con certeza qué acciones tomó, circulan rumores de que intentó alguna represalia contra la nueva directora. Tras su salida, Agnes decidió tomar un año sabático para replantear su futuro. Actualmente, busca una nueva empresa que la acoja, pero sus problemas de salud y limitaciones físicas complican esta búsqueda. La investigación sobre su situación continúa.",
+        rotate: '6deg',
+        translateX: '15vw',
+        translateY: '-5vh',
+        image: 'https://preview.redd.it/agnes-tachyon-by-amanok0-v0-bfcm4mf63uue1.jpeg?width=640&crop=smart&auto=webp&s=6f9624ec91e21d516d696a0e0a992bc7d7a2c74b'
+      },
+      {
+        title: "Bajo la gran sombra",
+        text: "Nombre: Agnes Tachyon\nEdad: 26 años (edad al momento del reporte)\nProfesión: Directora del Departamento de Optimización Humana (DOH)\nGustos: Dulces, gatos, hamacas, carne, café con leche, cerveza dulce, la calma, las visitas, flores\nDisgustos: Sabores amargos, mentiras piadosas, ser subestimada, el odio injustificado, el desprecio hacia su persona, medicamentos, pastillas, agujas, alumnos, niños\n\nAgnes retomó un empleo como maestra general en una escuela, impartiendo clases de química, historia y ciencias naturales. Su especialidad es la química, materia que actualmente enseña. Con el tiempo, fue ascendiendo dentro del ámbito académico: pasó de la educación básica a la secundaria, y eventualmente a la universidad, donde comenzó a ofrecer clases particulares.\n\nSin embargo, según algunos docentes, sus alumnos mostraban poco o ningún interés en sus clases. Este fenómeno, aunque preocupante, resulta comprensible dado el escaso entusiasmo de las nuevas generaciones. Pese a sus intentos por entablar alguna relación con sus estudiantes, sus esfuerzos parecen haber sido en vano. Se le ha visto trabajando desde su casa, a la cual ocasionalmente ingresaban personas que se presume son familiares o conocidos cercanos. No obstante, Agnes es reservada y poco abierta a las visitas.\n\nTras algunos días, surgieron indicios de que había retomado sus investigaciones, esta vez en circunstancias menos convencionales. Se dice que empezó a colaborar con otra entidad gubernamental, aunque esta no figura oficialmente en registros públicos. Esta empresa parece operar lejos del escrutinio, en parte porque Agnes mantiene una relación conflictiva con la atención pública. Se le ha observado en instalaciones subterráneas, donde aparentemente trabaja bajo las órdenes de su nuevo superior, conocido únicamente como 'el vendedor de helados', que al parecer usa esa ocupación como fachada. Después de todo, ¿quién sospecharía de alguien así?\n\nAgnes trabajó allí durante algunas semanas hasta que fue despedida. Posteriormente, la empresa fue catalogada como fraudulenta. Las investigaciones sugieren que pudo haber estado involucrada en el fraude, aunque no se ha encontrado evidencia concluyente. A pesar de esto, las especulaciones continúan, alimentadas por las amenazas constantes que Agnes ha recibido.\n\nLa última vez que fue vista, abordaba una camioneta blanca con una maleta negra —se sospecha que contenía una suma considerable de dinero. Actualmente, su paradero es desconocido. Al recuperar algunas de sus pertenencias, solo se encontró una grabación con el siguiente contenido: [Grabación no disponible].",
+        rotate: '-6deg',
+        translateX: '25vw',
+        translateY: '8vh',
+        image: 'https://s1.zerochan.net/Agnes.Tachyon.600.3747793.jpg'
+      },
+      {
+        title: "Vida actual",
+        text: "Ubicación actual: desconocida\nAlias registrado: Ana T. Quintero\nObservaciones: bajo vigilancia pasiva – nivel 2\n\nDesde hace ya varios meses, Agnes Tachyon no es Agnes Tachyon.\n\nAhora, en una pequeña ciudad fronteriza cuyo nombre no figura en mapas turísticos, una mujer de cabello oscuro, atado siempre con una cinta gris, sirve cafés en una panadería modesta que abre antes del amanecer. Se hace llamar Ana. Tiene una rutina simple: trabaja de lunes a sábado, cierra puntualmente a las 6:00 p.m., y cada tarde pasea sola entre los senderos de un parque con pocas luces, acompañada solo por una libreta y una pluma. A veces dibuja fórmulas, otras veces escribe nombres que luego tacha sin explicación.\n\nLa gente del pueblo la describe como amable, algo seria, pero confiable. Siempre paga en efectivo. Vive en un pequeño apartamento sobre la panadería. Tiene un gato. Nunca recibe visitas.\n\nPero el pasado no desaparece. Se silencia.\n\nPor las noches, cuando la ciudad duerme y las cortinas están cerradas, Agnes enciende la televisión en bajo volumen y observa antiguos documentales científicos, algunos de los cuales solía presentar ella misma. De vez en cuando, su rostro se endurece ante una voz conocida o una imagen olvidada. Cambia el canal. Repite una palabra en voz baja. Respira hondo.\n\nAunque ha dejado atrás laboratorios, fórmulas y experimentos, aún mantiene escondida una caja metálica en la parte trasera del armario. Dentro hay un viejo USB, una fotografía desgastada, una hoja con códigos escritos a mano y una tarjeta sin activar. A veces abre la caja. A veces no.\n\nSabe que su nombre aún figura en listas no oficiales. Sabe que alguien la busca.Tal vez alguien peor. Por eso no se permite bajar la guardia. No usa redes sociales, no responde llamadas desconocidas, no se deja tomar fotografías.\n\nAgnes —o Ana— vive ahora en pausa. Como un espectro entre dos vidas. Recordando la brillantez de sus experimentos y el peso de sus errores. En su nuevo mundo no hay agujas, ni alumnos, ni laboratorios... pero tampoco hay paz completa.\n\nSolo una calma tensa. Como si el pasado aún pudiera tocar la puerta.\n\nY algún día, tal vez lo haga.",
+        rotate: '25deg',
+        translateX: '35vw',
+        translateY: '-10vh',
+        image: 'https://images4.alphacoders.com/122/1223528.jpg'
+      }
+    ];
+
+    const container = document.getElementById('folders-container');
+    const overlay = document.getElementById('overlay');
+    foldersData.forEach((folder, index) => {
+      const folderDiv = document.createElement('div');
+      folderDiv.className = 'folder';
+      folderDiv.style.setProperty('--rotate', folder.rotate);
+      folderDiv.style.setProperty('--translate-x', folder.translateX);
+      folderDiv.style.setProperty('--translate-y', folder.translateY);
+      folderDiv.dataset.originalTransform = `rotate(${folder.rotate}) translate(${folder.translateX}, ${folder.translateY}) rotateY(0deg)`;
+      folderDiv.innerHTML = `<h3 class="text-center pt-4 text-base font-bold text-gray-800">${folder.title}</h3>`;
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'folder-content';
+      contentDiv.innerHTML = `
+        <div class="folder-image" style="background-image: url('${folder.image}');"></div>
+        <div class="folder-text">${folder.text}</div>
+        <span class="close-btn">×</span>
+      `;
+      folderDiv.addEventListener('click', () => {
+        if (!folderDiv.classList.contains('open')) {
+          folderDiv.classList.add('open');
+          overlay.style.display = 'block';
+          const content = folderDiv.nextElementSibling;
+          content.style.display = 'flex';
+        } else {
+          folderDiv.classList.remove('open');
+          const content = folderDiv.nextElementSibling;
+          content.style.display = 'none';
+          overlay.style.display = 'none';
+          folderDiv.style.transform = folderDiv.dataset.originalTransform;
+        }
+      });
+      container.appendChild(folderDiv);
+      container.appendChild(contentDiv);
+    });
+
+    document.querySelectorAll('.close-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const content = e.target.parentElement;
+        const folder = content.previousElementSibling;
+        folder.classList.remove('open');
+        content.style.display = 'none';
+        overlay.style.display = 'none';
+      });
+    });
+
+    const modal = document.getElementById('modal');
+    const modalText = document.getElementById('modal-text');
+    const closeModal = document.getElementById('close-modal');
+    const tableContainer = document.getElementById('table-container');
+    const clickArea = document.getElementById('click-area');
+
+    function showModal(text) {
+      modalText.innerText = text;
+      modal.style.display = 'flex';
+    }
+
+    closeModal.addEventListener('click', () => {
+      modal.style.display = 'none';
+    });
+
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.style.display = 'none';
+      }
+    });
+
+    let isTopView = false;
+    clickArea.addEventListener('click', () => {
+      isTopView = !isTopView;
+      tableContainer.classList.toggle('top-view', isTopView);
+    });
+
+    
+    const audio = document.getElementById('background-audio');
+    const playBtn = document.getElementById('play-btn');
+    const pauseBtn = document.getElementById('pause-btn');
+
+    playBtn.addEventListener('click', () => {
+      audio.play();
+      playBtn.classList.add('hidden');
+      pauseBtn.classList.remove('hidden');
+    });
+
+    pauseBtn.addEventListener('click', () => {
+      audio.pause();
+      pauseBtn.classList.add('hidden');
+      playBtn.classList.remove('hidden');
+    });
+  </script>
+</body>
+</html>
