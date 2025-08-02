@@ -12,6 +12,45 @@
                 var firstSheetName = workbook.SheetNames[0];
                 var worksheet = workbook.Sheets[firstSheetName];
 
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
                
                 var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
                 
@@ -212,12 +251,15 @@
   </div>
   
   <div class="audio-container">
-    <audio id="agnes-audio" loop volume="0.5">
-      <source src="agnes.mp3" type="audio/mpeg">
-      <source src="agnes.mp3" type="audio/ogg">
-      Tu navegador no soporta el elemento de audio.
+    <audio id="background-audio" loop volume="0.5">
+      <source src="https://eta.vgmtreasurechest.com/soundtracks/tsukihime-a-piece-of-blue-glass-moon-original-soundtrack/qpruzxirvb/1-05.%20Record.mp3" type="audio/mpeg">
+      <source src="https://eta.vgmtreasurechest.com/soundtracks/tsukihime-a-piece-of-blue-glass-moon-original-soundtrack/qpruzxirvb/1-05.%20Record.mp3" type="audio/ogg">
+      
     </audio>
-    <button id="play-agnes-btn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">Reproducir Audio de Agnes</button>
+    <div class="flex space-x-2">
+      <button id="play-btn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">Reproducir</button>
+      <button id="pause-btn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">Pausar</button>
+    </div>
   </div>
 
   <script type="text/javascript">
@@ -287,7 +329,7 @@
       },
       {
         title: "Vida actual",
-        text: "Ubicación actual: desconocida\nAlias registrado: Ana T. Quintero\nObservaciones: bajo vigilancia pasiva – nivel 2\n\nDesde hace ya varios meses, Agnes Tachyon no es Agnes Tachyon.\n\nAhora, en una pequeña ciudad fronteriza cuyo nombre no figura en mapas turísticos, una mujer de cabello oscuro, atado siempre con una cinta gris, sirve cafés en una panadería modesta que abre antes del amanecer. Se hace llamar Ana. Tiene una rutina simple: trabaja de lunes a sábado, cierra puntualmente a las 6:00 p.m., y cada tarde pasea sola entre los senderos de un parque con pocas luces, acompañada solo por una libreta y una pluma. A veces dibuja fórmulas, otras veces escribe nombres que luego tacha sin explicación.\n\nLa gente del pueblo la describe como amable, algo seria, pero confiable. Siempre paga en efectivo. Vive en un pequeño apartamento sobre la panadería. Tiene un gato. Nunca recibe visitas.\n\nPero el pasado no desaparece. Se silencia.\n\nPor las noches, cuando la ciudad duerme y las cortinas están cerradas, Agnes enciende la televisión en bajo volumen y observa antiguos documentales científicos, algunos de los cuales solía presentar ella misma. De vez en cuando, su rostro se endurece ante una voz conocida o una imagen olvidada. Cambia el canal. Repite una palabra en voz baja. Respira hondo.\n\nAunque ha dejado atrás laboratorios, fórmulas y experimentos, aún mantiene escondida una caja metálica en la parte trasera del armario. Dentro hay un viejo USB, una fotografía desgastada, una hoja con códigos escritos a mano y una tarjeta sin activar. A veces abre la caja. A veces no.\n\nSabe que su nombre aún figura en listas no oficiales. Sabe que alguien la busca.Tal vez alguien peor. Por eso no se permite bajar la guardia. No usa redes sociales, no responde llamadas desconocidas, no se deja tomar fotografías.\n\nAgnes —o Ana— vive ahora en pausa. Como un espectro entre dos vidas. Recordando la brillantez de sus experimentos y el peso de sus errores. En su nuevo mundo no hay agujas, ni alumnos, ni laboratorios... pero tampoco hay paz completa.\n\nSolo una calma tensa. Como si el pasado aún pudiera tocar la puerta.\n\nY algún día, tal vez lo haga.",
+        text: "Ubicación actual: desconocida\nAlias registrado: Ana T. Quintero\nObservaciones: bajo vigilancia pasiva – nivel 2\n\nOcupacion: Vendedora\nDesde hace ya varios meses, Agnes Tachyon no es Agnes Tachyon.\n\nAhora, en una pequeña ciudad fronteriza cuyo nombre no figura en mapas turísticos, una mujer de cabello oscuro, atado siempre con una cinta gris, sirve cafés en una panadería modesta que abre antes del amanecer. Se hace llamar Ana. Tiene una rutina simple: trabaja de lunes a sábado, cierra puntualmente a las 6:00 p.m., y cada tarde pasea sola entre los senderos de un parque con pocas luces, acompañada solo por una libreta y una pluma. A veces dibuja fórmulas, otras veces escribe nombres que luego tacha sin explicación.\n\nLa gente del pueblo la describe como amable, algo seria, pero confiable. Siempre paga en efectivo. Vive en un pequeño apartamento sobre la panadería. Tiene un gato. Nunca recibe visitas.\n\nPero el pasado no desaparece. Se silencia.\n\nPor las noches, cuando la ciudad duerme y las cortinas están cerradas, Agnes enciende la televisión en bajo volumen y observa antiguos documentales científicos, algunos de los cuales solía presentar ella misma. De vez en cuando, su rostro se endurece ante una voz conocida o una imagen olvidada. Cambia el canal. Repite una palabra en voz baja. Respira hondo.\n\nAunque ha dejado atrás laboratorios, fórmulas y experimentos, aún mantiene escondida una caja metálica en la parte trasera del armario. Dentro hay un viejo USB, una fotografía desgastada, una hoja con códigos escritos a mano y una tarjeta sin activar. A veces abre la caja. A veces no.\n\nSabe que su nombre aún figura en listas no oficiales. Sabe que alguien la busca.Tal vez alguien peor. Por eso no se permite bajar la guardia. No usa redes sociales, no responde llamadas desconocidas, no se deja tomar fotografías.\n\nAgnes —o Ana— vive ahora en pausa. Como un espectro entre dos vidas. Recordando la brillantez de sus experimentos y el peso de sus errores. En su nuevo mundo no hay agujas, ni alumnos, ni laboratorios... pero tampoco hay paz completa.\n\nSolo una calma tensa. Como si el pasado aún pudiera tocar la puerta.\n\nY algún día, tal vez lo haga.",
         rotate: '25deg',
         translateX: '35vw',
         translateY: '-10vh',
@@ -368,11 +410,20 @@
     });
 
     
-    const agnesAudio = document.getElementById('agnes-audio');
-    const playAgnesBtn = document.getElementById('play-agnes-btn');
+    const audio = document.getElementById('background-audio');
+    const playBtn = document.getElementById('play-btn');
+    const pauseBtn = document.getElementById('pause-btn');
 
-    playAgnesBtn.addEventListener('click', () => {
-      agnesAudio.play();
+    playBtn.addEventListener('click', () => {
+      audio.play();
+      playBtn.classList.add('hidden');
+      pauseBtn.classList.remove('hidden');
+    });
+
+    pauseBtn.addEventListener('click', () => {
+      audio.pause();
+      pauseBtn.classList.add('hidden');
+      playBtn.classList.remove('hidden');
     });
   </script>
 </body>
